@@ -1,7 +1,9 @@
 # 🛡️ ScamShield AI — AI Scam/Phishing Website Research Assistant
 **SerpApi India Hackathon 2026** | "Investigate. Verify. Stay Safe."
 
-Paste a suspicious website, company name, or job offer → live public-info research → **Risk Level (LOW/MEDIUM/HIGH 0–100)** with reasons, evidence, sources, and a family-shareable report.
+**🚀 Live demo: [scanshield1.netlify.app](https://scanshield1.netlify.app)** (live SerpApi evidence mode)
+
+Paste a suspicious website, company name, or job offer → live public-info research → **final verdict (SAFE / FAKE URL · MESSAGE · COMPANY)** with a 0–100 risk score, reasons, evidence, sources, and a family-shareable report.
 
 ## Why it wins
 - **SerpApi is the engine, not decoration:** every check fans out to SerpApi Google Search (`"X" scam/fraud/complaint`, `"X" review`, official-site lookup) + Google News. Without the key it runs honest demo-mode (3 canned cases) so the stage demo never dies.
@@ -48,5 +50,16 @@ Verdict: 0–30 LOW 🟢 · 31–60 MEDIUM 🟡 · 61–100 HIGH 🔴. Final out
 3. `www.example.com` → LOW 12 — opens the site (HTTP 200, title "Example Domain") and confirms official presence (proves no fear-mongering).
 4. Copy report → "forward on WhatsApp before anyone pays a rupee."
 
+## Run locally
+```bash
+npm install
+cp .env.example .env   # add SERPAPI_KEY (without it → honest demo-mode)
+npm start              # http://localhost:3000
+```
+
 ## Deploy
-Vercel/Render: `npm start`, env `SERPAPI_KEY`. ~4–6 SerpApi credits per live check.
+Preconfigured for both platforms (import the GitHub repo — build settings auto-fill):
+- **Netlify** (`netlify.toml`) — static site from `public/`, `/api/*` wrapped by `netlify/functions/api.js` (serverless-http). Set env `SERPAPI_KEY`.
+- **Vercel** (`vercel.json`) — static from `public/`, serverless API in `api/`. Set env `SERPAPI_KEY`.
+
+Local uses `npm start`; ~4–6 SerpApi credits per live check.
