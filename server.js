@@ -484,4 +484,9 @@ function buildReport(entity, score, finalVerdict, confidence, reasons, sources) 
 
 app.get('/api/health', (req, res) => res.json({ ok: true, serpapi: !!SERPAPI_KEY, time: new Date().toISOString() }));
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-app.listen(PORT, () => console.log(`ScamShield AI on http://localhost:${PORT} | SerpApi: ${SERPAPI_KEY ? 'LIVE' : 'demo-mode'}`));
+
+// Local dev (node server.js) → listen. On Vercel the app is required by api/*.js and runs as a function.
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`ScamShield AI on http://localhost:${PORT} | SerpApi: ${SERPAPI_KEY ? 'LIVE' : 'demo-mode'}`));
+}
+module.exports = app;
