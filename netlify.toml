@@ -1,0 +1,10 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+# Static files (index.html, styles.css, app.js, landing3d.js) are served from /public.
+# All /api/* traffic is routed to the Netlify Function wrapping the Express app.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
