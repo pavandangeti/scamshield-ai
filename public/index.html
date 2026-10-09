@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ScamShield AI — Investigate. Verify. Stay Safe.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="progress"></div>
+<canvas id="bg3d"></canvas>
+<div class="vignette"></div>
+<div class="bg-grid"></div>
+<div class="bg-glow g1"></div><div class="bg-glow g2"></div>
+
+<!-- 1. NAVBAR -->
+<nav class="nav">
+  <div class="wrap nav-in">
+    <div class="logo">🛡️ <span>ScamShield AI</span><small>AI-Powered Scam &amp; Phishing Research Assistant</small></div>
+    <div class="links">
+      <a href="#home">Home</a><a href="#research">Research</a><a href="#historySec">History</a><a href="#about">About</a>
+    </div>
+    <div class="nav-btns">
+      <a href="#home" class="btn-primary sm">Get Started</a>
+    </div>
+  </div>
+</nav>
+
+<!-- 2. SPLASH LANDING -->
+<section id="splash">
+  <div class="splash-in">
+    <div class="splash-logo">🛡️</div>
+    <h1 class="splash-name">ScamShield AI</h1>
+    <p class="splash-tag">Investigate · Verify · Stay Safe</p>
+  </div>
+  <div class="splash-scroll"><span>Scroll to investigate<span class="arrow">↓</span></span></div>
+</section>
+
+<div class="wrap">
+  <!-- 3. HERO / SEARCH -->
+  <header id="home" class="hero">
+    <div class="pill">AI-POWERED SCAM DETECTION</div>
+    <h1>Is this website or offer <span class="cyan">SAFE?</span></h1>
+    <p class="sub">Investigate suspicious websites, companies, job offers and messages.</p>
+    <div class="search-row">
+      <span class="sicon">🔍</span>
+      <input id="query" placeholder="Enter website, company or job offer..." value="" />
+    </div>
+    <div id="pasteHint" class="paste-hint hidden">📋 URL detected — press <kbd>Enter</kbd> to investigate</div>
+    <button id="go" class="btn-primary big">🔎 Investigate</button>
+    <div class="cmp-row">
+      <input id="cmpInput" placeholder="Optional: paste a 2nd URL/offer to compare side-by-side…" />
+      <button id="cmpBtn" class="btn-ghost">⚖️ Compare</button>
+    </div>
+    <div id="engineBadge" class="engine">checking engine…</div>
+  </header>
+
+  <!-- 3. QUICK CARDS -->
+  <section class="cards">
+    <button class="qcard" data-ph="Paste the website URL… (e.g. https://example.com)"><span class="qe">🌐</span><b>Website</b><small>Check a URL</small></button>
+    <button class="qcard" data-ph="Enter the company name… (e.g. Infosys)"><span class="qe">🏢</span><b>Company</b><small>Verify company</small></button>
+    <button class="qcard" data-ph="Paste the full job offer text here…"><span class="qe">💼</span><b>Job Offer</b><small>Analyze job</small></button>
+  </section>
+
+  <!-- live animation -->
+  <div id="scan" class="hidden">
+    <div class="scan-card">
+      <div class="scan-row"><span class="spinner"></span><span id="scanTxt">Scanning website…</span></div>
+      <div class="scan-bar"><i id="scanFill"></i></div>
+      <div id="scanSteps" class="scan-steps"></div>
+    </div>
+  </div>
+
+  <!-- 4/5. RESULT -->
+  <section id="research" class="hidden">
+    <div class="panel result">
+      <div class="p-title">INVESTIGATION RESULT
+        <span class="conf-row"><span id="confBadge" class="conf"></span><span class="ct"><i id="confFill"></i></span></span>
+      </div>
+      <div class="res-head">
+        <div class="res-entity" id="resEntity">—</div>
+        <div id="resVerdict" class="verdict">—</div>
+      </div>
+      <div id="aiSum" class="ai-sum">🧠 analysing…</div>
+      <div class="score-wrap">
+        <svg viewBox="0 0 160 160" class="ring">
+          <circle cx="80" cy="80" r="66" class="track" />
+          <circle id="ringTrail" cx="80" cy="80" r="66" class="trail" />
+          <circle id="ringFg" cx="80" cy="80" r="66" class="fg" />
+        </svg>
+        <div class="score-mid"><div id="scoreNum" class="score-num">0</div><div id="scoreLbl" class="score-lbl">—</div></div>
+      </div>
+      <ul id="reasons" class="reasons"></ul>
+      <div id="trapBox" class="hidden">
+        <div class="p-title sm">⚠️ TRAP PHRASES SPOTTED IN YOUR TEXT</div>
+        <ul id="traps" class="traps"></ul>
+      </div>
+      <div class="row-btns">
+        <button id="copyBtn" class="btn-ghost">📋 Copy report</button>
+        <button id="dlBtn" class="btn-ghost">📥 Download report</button>
+        <button id="pngBtn" class="btn-ghost">🎴 Report card (PNG)</button>
+        <button id="shareBtn" class="btn-ghost">📤 Share</button>
+      </div>
+    </div>
+
+    <!-- 6. EVIDENCE -->
+    <div class="panel">
+      <div class="p-title">🔎 EVIDENCE FOUND</div>
+      <div id="evidence"></div>
+    </div>
+
+    <!-- 7. SOURCES -->
+    <div class="panel">
+      <div class="p-title">🌐 SOURCES CHECKED</div>
+      <ul id="checked" class="checked"></ul>
+      <button id="srcBtn" class="btn-ghost sm">View Sources ▾</button>
+      <div id="srcList" class="hidden"></div>
+    </div>
+
+    <!-- 8. RECOMMENDATION -->
+    <div id="rec" class="panel rec"></div>
+    <p class="disclaimer">Satark note: ScamShield is a research aid based on public information — not a legal verdict. Always verify independently. Fraud? Report at <a href="https://www.cybercrime.gov.in" target="_blank">cybercrime.gov.in</a> or call 1930.</p>
+  </section>
+
+  <!-- COMPARE -->
+  <section id="compare" class="hidden">
+    <div class="panel">
+      <div class="p-title">⚖️ SIDE-BY-SIDE COMPARISON</div>
+      <div id="cmpGrid" class="cmp-grid"></div>
+      <p id="cmpVerdictLine" class="cmp-line"></p>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="historySec" class="panel hidden">
+    <div class="p-title">🕘 INVESTIGATION HISTORY</div>
+    <div id="history" class="hist"></div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer id="about" class="foot">
+    <div class="flogo">🛡️ ScamShield AI</div>
+    <p class="muted">Investigate. Verify. Stay Safe. — SerpApi India Hackathon 2026. Evidence engine: SerpApi Google Search + News.</p>
+  </footer>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="app.js"></script>
+<script src="landing3d.js"></script>
+</body>
+</html>
