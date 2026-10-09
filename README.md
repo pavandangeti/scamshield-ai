@@ -60,6 +60,5 @@ npm start              # http://localhost:3000
 ## Deploy
 Preconfigured for both platforms (import the GitHub repo — build settings auto-fill):
 - **Netlify** (`netlify.toml`) — static site from `public/`, `/api/*` wrapped by `netlify/functions/api.js` (serverless-http). Set env `SERPAPI_KEY`.
-- **Vercel** (`vercel.json`) — static from `public/`, serverless API in `api/`. Set env `SERPAPI_KEY`.
 
 Local uses `npm start`; ~4–6 SerpApi credits per live check.
