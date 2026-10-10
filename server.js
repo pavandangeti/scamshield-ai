@@ -187,12 +187,41 @@ async function serpOrganic(query, num = 10) {
   const j = await serpFetch(url);
   return j.organic_results || [];
 }
+// Social/profile platforms: the DOMAIN is always real & indexed (and returns HTTP 200 for any
+// username), so checking the bare domain makes every fake profile look SAFE. The fake part is
+// the username/path — verify the FULL "platform/username" URL instead (0 Google results = fake).
+const PROFILE_PLATFORMS = ['instagram.com', 'facebook.com', 'twitter.com', 'x.com', 'tiktok.com', 'linkedin.com', 'youtube.com', 'reddit.com', 'pinterest.com', 'snapchat.com', 'github.com', 'threads.net', 'quora.com', 't.me', 'telegram.me'];
+function profileEntity(entity, input) {
+  const ent = String(entity || '');
+  if (!ent) return null;
+  const host = hostOf(/^https?:\/\//i.test(ent) ? ent : 'https://' + ent);
+  if (!host) return null;
+  if (!PROFILE_PLATFORMS.some(p => host === p || host.endsWith('.' + p))) return null;
+  const src = String(input || '').trim();
+  let u = null;
+  try { u = new URL(/^https?:\/\//i.test(src) ? src : 'https://' + src); }
+  catch (e) {
+    const m = src.match(/^[A-Za-z0-9.-]+\.[A-Za-z]{2,}(\/[^\s"'<>]*)?/);
+    return m && m[1] && m[1] !== '/' ? host + m[1].replace(/\/+$/, '') : null;
+  }
+  const path = u.pathname.replace(/\/+$/, '');
+  const query = u.search || '';
+  // generic endpoints (facebook profile.php?id=123, etc.) put the identity in the query string
+  if ((!path || path === '/' || /^\/(profile\.php|users?|p|pages|in)$/i.test(path)) && query) return host + path + query;
+  if (!path || path === '/') return null; // bare domain (e.g. instagram.com) — no username to verify
+  return host + path;
+}
 async function existenceCheck(entity, input, type) {
   const out = { count: 0, domainHits: 0, officialMatch: null, fetchStatus: null, fetchTitle: '', fetchError: '', absent: false, unreachable: false };
   if (!entity || entity === 'job offer message') return out;
 
+  const prof = profileEntity(entity, input);
+  const idxQuery = prof ? `site:${prof}` : entity;
+  out.query = prof ? prof : entity;
+  out.profile = prof || null;
+
   const tasks = [];
-  tasks.push(serpOrganic(`"${entity}"`, 10).then(r => ['idx', r, null]).catch(e => ['idx', null, String(e.message || e)]));
+  tasks.push(serpOrganic(idxQuery, 10).then(r => ['idx', r, null]).catch(e => ['idx', null, String(e.message || e)]));
   tasks.push(serpOrganic(`"${entity}" official website`, 5).then(r => ['off', r, null]).catch(e => ['off', null, String(e.message || e)]));
 
   // "open and check": actually request the URL for websites
@@ -382,7 +411,9 @@ app.post('/api/check', async (req, res) => {
   const verdict = score >= 61 ? 'HIGH' : score >= 31 ? 'MEDIUM' : 'LOW';
 
   const reasons = [];
-  if (exist && exist.absent) reasons.unshift('Does not exist on the public web — 0 Google results for this exact name');
+  if (exist && exist.absent) reasons.unshift(exist.profile
+    ? 'This exact profile/page does not exist on the public web — 0 Google results for its full URL'
+    : 'Does not exist on the public web — 0 Google results for this exact name');
   else if (exist && exist.dnsDead) reasons.unshift('The domain does not resolve — no live website exists at this address');
   else if (exist && exist.unreachable) reasons.unshift('Website is unreachable and does not appear in Google\'s index');
   if (ev.scamHits.length) reasons.push(verdict === 'LOW'
@@ -396,15 +427,19 @@ app.post('/api/check', async (req, res) => {
   const evidence = [];
   if (exist) {
     evidence.unshift({
-      icon: '🔍', title: 'Existence check (whole web)',
+      icon: '🔍', title: exist.profile ? 'Profile/page existence check' : 'Existence check (whole web)',
       text: exist.idxOk === false
         ? `The Google index check could not be completed this time (search API hiccup${exist.idxErr ? ': ' + exist.idxErr.slice(0, 60) : ''}) — existence was NOT verified and this was not counted as risk either way.`
         : exist.absent
-          ? `Google returns 0 results for "${entity}" — this name does not appear anywhere on the public internet. Real websites and companies always have a footprint.`
-          : `Found ${exist.count} Google results for "${entity}"${exist.domainHits ? `, ${exist.domainHits} pointing back to this exact domain` : ''}.`
+          ? (exist.profile
+            ? `Google's index has NO page at "${exist.query}" (site: search returned 0 results) — this profile/page does not exist publicly. Social platforms still serve a page for usernames that don't exist, so the live site responding is NOT proof it's real.`
+            : `Google returns 0 results for "${entity}" — this name does not appear anywhere on the public internet. Real websites and companies always have a footprint.`)
+          : `Found ${exist.count} Google results for "${exist.query || entity}"${exist.domainHits ? `, ${exist.domainHits} pointing back to this exact domain` : ''}.`
     });
     if (type === 'website') {
-      if (exist.fetchStatus) evidence.push({ icon: '📡', title: 'Website opened & checked', text: `The URL responded with HTTP ${exist.fetchStatus}${exist.fetchTitle ? ` — page title: "${exist.fetchTitle}"` : ''}.` });
+      if (exist.fetchStatus) evidence.push(exist.profile
+        ? { icon: '📡', title: 'Platform replied (HTTP ' + exist.fetchStatus + ')', text: `The platform answered${exist.fetchTitle ? ` ("${exist.fetchTitle}")` : ''}, but Instagram/Facebook/X-style sites return a page even for usernames that don't exist — so this alone is not proof the profile is real.` }
+        : { icon: '📡', title: 'Website opened & checked', text: `The URL responded with HTTP ${exist.fetchStatus}${exist.fetchTitle ? ` — page title: "${exist.fetchTitle}"` : ''}.` });
       else if (exist.fetchError) evidence.push({ icon: '🚫', title: exist.dnsDead ? 'Website does not exist (DNS failed)' : 'Website could not be opened', text: `Attempted to open the site: ${exist.fetchError}.` });
     }
     if (exist.officialMatch) evidence.push({ icon: '✅', title: 'Official presence verified', text: `Google confirms an official-looking presence: "${exist.officialMatch.title}" — open the sources below to compare.` });
